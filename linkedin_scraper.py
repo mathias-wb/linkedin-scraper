@@ -8,11 +8,13 @@ from bs4 import BeautifulSoup
 from time import sleep
 from random import randint
 
+import pandas as pd
+import numpy as np
 import re
 
 driver = webdriver.Chrome(ChromeDriverManager().install())
 
-KEYWORDS = "Product Designer"
+KEYWORDS = "Graduate Data Analyst"
 LOCATION = "London"
 
 kw_url =  "%20".join(KEYWORDS.split(" "))
@@ -20,30 +22,79 @@ loc_url = "%20".join(LOCATION.split(" "))
 
 url = "https://www.linkedin.com/jobs/search?keywords=" + kw_url + "&location=" + loc_url
 
-
 wait = WebDriverWait(driver, 5)
 driver.get(url)
 
-# Cookie Handler
+# Cookie Banner Handler
 wait.until(EC.element_to_be_clickable((By.XPATH, "//*[@action-type='ACCEPT']")))
 driver.find_element_by_xpath("//*[@action-type='ACCEPT']").click()
 
-# Scroll down page to load listings
-for _ in range(6):
+# Scrolls down page to load listings and clicks "See more jobs button when it appears."
+pages = 20
+while pages > 0:
+    wait = WebDriverWait(driver, randint(20,50)/10)
+    try:
+        wait.until(EC.element_to_be_clickable((By.XPATH, "//*[@aria-label='See more jobs']")))
+        driver.find_element_by_xpath("//*[@aria-label='See more jobs']").click()
+        sleep(randint(20,50)/10)
+    except Exception:
+        pass
     driver.find_element_by_tag_name("body").send_keys(Keys.END)
-    sleep(randint(20, 50)/10)
+    pages -= 1
 
+# Once here, the fun begins!
 html = driver.page_source
 soup = BeautifulSoup(html, "html.parser")
 
-listings = soup.find_all("a", {"data-tracking-control-name": "public_jobs_jserp-result_search-card"})
+jobs_df = pd.DataFrame()
 
-# Get listing titles
+listings = soup.find_all("div", {"class": "base-search-card__info"})
+
+# Get info from listings
 for l in listings:
+    new_record = {}
+    # Title
     try:
-        title = l.find("span", {"class": "sr-only"})
-        title_reformat = re.sub("[^!-~()]+", " ", title.text).strip()
-        print(title_reformat)
+        title = l.find("h3", {"class": "base-search-card__title"})
+        title_reformat = re.sub("[^!-~()],+", " ", title.text).strip()
+        new_record["title"] = title_reformat
     except AttributeError:
+        new_record["title"] = np.NaN
+
+    # Company
+    try:
+        company = l.find("a", {"class": "hidden-nested-link"})
+        company_reformat = re.sub("[^!-~()],+", " ", company.text).strip()
+        new_record["company"] = company_reformat
+    except AttributeError:
+        new_record["company"] = np.NaN
+
+    # Location
+    try:
+        location = l.find("span", {"class": "job-search-card__location"})
+        location_reformat = re.sub("[^!-~()],+", " ", location.text).strip()
+        new_record["location"] = location_reformat
+    except AttributeError:
+        new_record["location"] = np.NaN
+
+    # List Date
+    try:
+        list_date = l.find("time").get("datetime")
+        new_record["list_date"] = list_date
+    except AttributeError:
+        new_record["list_date"] = np.NaN
+
+    # Salary
+    try:
+        salary = l.find("span", {"class": "job-search-card__salary-info"})
+        salary_reformat = re.sub("[^!-~()]+", " ", salary.text).strip()
+        new_record["salary_low"] = salary_reformat.split(" - ")[0]
+        new_record["salary_high"] = salary_reformat.split(" - ")[1]
+    except AttributeError:
+        new_record["salary_low"] = np.NaN
+        new_record["salary_high"] = np.NaN
         pass
-    # TODO click "See more jobs" button when listings stop loading
+
+    jobs_df = pd.concat([jobs_df, pd.DataFrame([new_record])], ignore_index=True)
+    
+display(jobs_df)
