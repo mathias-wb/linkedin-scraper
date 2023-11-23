@@ -11,6 +11,7 @@ from random import randint
 import pandas as pd
 import numpy as np
 import re
+import os
 
 driver = webdriver.Chrome(ChromeDriverManager().install())
 
@@ -23,6 +24,7 @@ loc_url = "%20".join(LOCATION.split(" "))
 url = "https://www.linkedin.com/jobs/search?keywords=" + kw_url + "&location=" + loc_url
 
 wait = WebDriverWait(driver, 5)
+driver.maximize_window()
 driver.get(url)
 
 # Cookie Banner Handler
@@ -30,7 +32,7 @@ wait.until(EC.element_to_be_clickable((By.XPATH, "//*[@action-type='ACCEPT']")))
 driver.find_element_by_xpath("//*[@action-type='ACCEPT']").click()
 
 # Scrolls down page to load listings and clicks "See more jobs button when it appears."
-pages = 20
+pages = 2
 while pages > 0:
     wait = WebDriverWait(driver, randint(20,50)/10)
     try:
@@ -56,7 +58,7 @@ for l in listings:
     # Title
     try:
         title = l.find("h3", {"class": "base-search-card__title"})
-        title_reformat = re.sub("[^!-~()],+", " ", title.text).strip()
+        title_reformat = re.sub("[^!-~(),]+", " ", title.text).strip()
         new_record["title"] = title_reformat
     except AttributeError:
         new_record["title"] = np.NaN
@@ -64,7 +66,7 @@ for l in listings:
     # Company
     try:
         company = l.find("a", {"class": "hidden-nested-link"})
-        company_reformat = re.sub("[^!-~()],+", " ", company.text).strip()
+        company_reformat = re.sub("[^!-~(),]+", " ", company.text).strip()
         new_record["company"] = company_reformat
     except AttributeError:
         new_record["company"] = np.NaN
@@ -72,7 +74,7 @@ for l in listings:
     # Location
     try:
         location = l.find("span", {"class": "job-search-card__location"})
-        location_reformat = re.sub("[^!-~()],+", " ", location.text).strip()
+        location_reformat = re.sub("[^!-~(),]+", " ", location.text).strip()
         new_record["location"] = location_reformat
     except AttributeError:
         new_record["location"] = np.NaN
@@ -88,8 +90,8 @@ for l in listings:
     try:
         salary = l.find("span", {"class": "job-search-card__salary-info"})
         salary_reformat = re.sub("[^!-~()]+", " ", salary.text).strip()
-        new_record["salary_low"] = salary_reformat.split(" - ")[0]
-        new_record["salary_high"] = salary_reformat.split(" - ")[1]
+        new_record["salary_low"] = float(salary_reformat.split(" - ")[0].replace(",", ""))
+        new_record["salary_high"] = float(salary_reformat.split(" - ")[1].replace(",", ""))
     except AttributeError:
         new_record["salary_low"] = np.NaN
         new_record["salary_high"] = np.NaN
@@ -97,4 +99,5 @@ for l in listings:
 
     jobs_df = pd.concat([jobs_df, pd.DataFrame([new_record])], ignore_index=True)
     
+# jobs_df.to_csv("linkedin_data.csv")
 display(jobs_df)
