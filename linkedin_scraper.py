@@ -21,12 +21,16 @@ driver = webdriver.Chrome(ChromeDriverManager().install())
 
 KEYWORDS = "Graduate Data Analyst -Business -Engineer -Scientist"
 LOCATION = "London"
+ENTRY_LEVEL = True
 PAGES = 5
 
 kw_url =  "%20".join(KEYWORDS.split(" "))
 loc_url = "%20".join(LOCATION.split(" "))
 
 url = "https://www.linkedin.com/jobs/search?keywords=" + kw_url + "&location=" + loc_url
+
+if ENTRY_LEVEL is True:
+    url += "&f_E=2"
 
 wait = WebDriverWait(driver, 5)
 driver.get(url)
