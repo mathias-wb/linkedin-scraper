@@ -107,8 +107,8 @@ for l in listings:
     try:
         salary = l.find("span", {"class": "job-search-card__salary-info"})
         salary = salary.text.strip()
-        new_record["salary_low"] = float(salary_reformat.split(" - ")[0].replace(",", "")[1:])
-        new_record["salary_high"] = float(salary_reformat.split(" - ")[1].replace(",", "")[1:])
+        new_record["salary_low"] = float(salary.split(" - ")[0].replace(",", "")[1:])
+        new_record["salary_high"] = float(salary.split(" - ")[1].replace(",", "")[1:])
     except AttributeError:
         new_record["salary_low"] = np.NaN
         new_record["salary_high"] = np.NaN
@@ -118,5 +118,5 @@ for l in listings:
     
 # jobs_df.to_csv("linkedin_data.csv",index=False)
 jobs_df["list_date"] = pd.to_datetime(jobs_df["list_date"])
-jobs_df.sort_values(by="list_date")
+jobs_df.sort_values(by="list_date", ascending=False)
 display(jobs_df)
