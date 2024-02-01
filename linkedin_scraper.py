@@ -123,4 +123,4 @@ for l in listings:
 # jobs_df.to_csv("linkedin_data.csv",index=False)
 jobs_df["list_date"] = pd.to_datetime(jobs_df["list_date"])
 jobs_df.sort_values(by="list_date", ascending=False)
-display(jobs_df)
+jobs_df
