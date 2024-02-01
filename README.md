@@ -1,11 +1,11 @@
 # LinkedIn Job Scraper
 ## Table of Contents
-- Overview
-- Key Features
-- Installation
-- Usage
-- Screenshots
-- Future Improvements
+- [Overview](#overview)
+- [Key Features](#key-features)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Screenshots](#screenshots)
+- [Future Improvements](#future-improvements)
 
 ## Overview
 This repository contains the files and documentation of a small web scraping project I did while looking for jobs online to help me automate the process.
